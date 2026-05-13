@@ -40,3 +40,15 @@ chroma_db/
 # OS
 .DS_Store
 Thumbs.db
+
+# Test scripts and documentation
+simple_test.py
+simple_test2.py
+test_chuhui.py
+test_query_rewrite.py
+test_vector_only.py
+test_verified_questions.py
+check_knowledgebase.py
+explore_knowledge_base.py
+extract_pdfs.py
+*.md
