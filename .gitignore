@@ -4,10 +4,6 @@ __pycache__/
 *$py.class
 *.so
 .Python
-env/
-venv/
-ENV/
-.venv/
 build/
 develop-eggs/
 dist/
@@ -24,10 +20,10 @@ wheels/
 .installed.cfg
 *.egg
 
-# Database
-chroma_db/
-*.sqlite3
-*.db
+# Virtual environments
+venv/
+env/
+ENV/
 
 # IDE
 .vscode/
@@ -35,20 +31,27 @@ chroma_db/
 *.swp
 *.swo
 *~
-.trae/
 
 # OS
 .DS_Store
 Thumbs.db
 
-# Test scripts and documentation
-simple_test.py
-simple_test2.py
-test_chuhui.py
-test_query_rewrite.py
-test_vector_only.py
-test_verified_questions.py
-check_knowledgebase.py
-explore_knowledge_base.py
-extract_pdfs.py
-*.md
+# Environment variables
+.env
+.env.local
+
+# ChromaDB
+chroma_db/
+
+# Test files
+test_*.py
+check_*.py
+evaluate_*.py
+verify_*.py
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.bak

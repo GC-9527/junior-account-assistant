@@ -69,7 +69,7 @@ class DocumentParser:
             return DocumentParser.parse_pdf(file_path)
         elif ext == '.docx':
             return DocumentParser.parse_docx(file_path), {}
-        elif ext == '.txt':
+        elif ext == '.txt' or ext == '.md':  # 支持 Markdown
             return DocumentParser.parse_txt(file_path), {}
         else:
             raise ValueError(f"不支持的文件类型: {ext}")

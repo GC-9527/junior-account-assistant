@@ -1,5 +1,4 @@
 import chromadb
-from chromadb.config import Settings
 from config import CHROMA_DB_DIR, EMBEDDING_DIM
 from rag.embedding import MultiModalEmbedding
 

@@ -152,10 +152,14 @@ def process_document(file_path: str, chroma_manager, splitter):
         
         filtered_chunks = []
         for chunk in chunks:
-            if len(chunk) > 0 and len(chunk) <= 8192:
-                filtered_chunks.append(chunk)
-            elif len(chunk) > 8192:
-                print(f"    警告: chunk长度 {len(chunk)} 超过限制，已跳过")
+            if len(chunk) > 0:
+                # 确保chunk不超过最大长度
+                if len(chunk) > 8192:
+                    # 对超长的chunk进行二次切分
+                    sub_chunks = splitter._split_large_chunk(chunk)
+                    filtered_chunks.extend(sub_chunks)
+                else:
+                    filtered_chunks.append(chunk)
         
         print(f"  文档长度: {len(text)} 字符, 切分为 {len(chunks)} 个chunk, 过滤后 {len(filtered_chunks)} 个")
         print(f"  推断类型: {metadata['knowledge_type']}, 章节: {metadata['chapter']}")
@@ -238,7 +242,7 @@ def build_and_save():
             file_path = os.path.join(dir_path, filename)
             if os.path.isfile(file_path):
                 ext = os.path.splitext(filename)[1].lower()
-                if ext in ['.pdf', '.docx', '.txt']:
+                if ext in ['.pdf', '.docx', '.txt', '.md']:
                     text_count += process_document(file_path, chroma_manager, splitter)
     
     image_count = process_images(chroma_manager)

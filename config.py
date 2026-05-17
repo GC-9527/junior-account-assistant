@@ -35,11 +35,9 @@ RETRIEVAL_K = 5
 
 EMBEDDING_DIM = 1024
 
-# 混合检索配置
-BM25_WEIGHT = 0.15  # 大幅降低BM25权重
+BM25_WEIGHT = 0.15
 VECTOR_WEIGHT = 0.85
 
-# 动态分块规则
 CHUNK_RULES = {
     "概念定义": {"chunk_size": 300, "chunk_overlap": 60},
     "会计分录": {"chunk_size": 200, "chunk_overlap": 40},
@@ -50,5 +48,12 @@ CHUNK_RULES = {
     "default": {"chunk_size": 350, "chunk_overlap": 70}
 }
 
-# 难度等级
 DIFFICULTY_LEVELS = ["简单", "中等", "困难"]
+
+TAVILY_API_KEY = os.getenv("TAVILY_API_KEY")
+
+USE_TAVILY_SEARCH = True
+TAVILY_MAX_RESULTS = 5
+
+USE_QUERY_EXPANSION = True
+QUERY_EXPANSION_COUNT = 2

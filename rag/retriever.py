@@ -1,5 +1,6 @@
 from rag.chroma_manager import ChromaManager
 from utils.bm25_retriever import HybridRetriever
+from utils.reranker import AdvancedReranker
 from config import RETRIEVAL_K, BM25_WEIGHT, VECTOR_WEIGHT
 
 
@@ -10,6 +11,7 @@ class Retriever:
             bm25_weight=BM25_WEIGHT,
             vector_weight=VECTOR_WEIGHT
         )
+        self.reranker = AdvancedReranker()
         self._init_bm25_index()
 
     def _init_bm25_index(self):
@@ -59,8 +61,17 @@ class Retriever:
         
         return {"$and": [{k: v} for k, v in conditions.items()]}
 
-    def search(self, query: str, k: int = RETRIEVAL_K, filter_type: str = None, use_hybrid: bool = False, use_strict_filter: bool = False) -> list:
-        """检索相关文档"""
+    def search(self, query: str, k: int = RETRIEVAL_K, filter_type: str = None, use_hybrid: bool = False, use_strict_filter: bool = False, use_rerank: bool = True) -> list:
+        """检索相关文档
+        
+        Args:
+            query: 查询文本
+            k: 返回结果数量
+            filter_type: 过滤类型
+            use_hybrid: 是否使用混合检索
+            use_strict_filter: 是否使用严格过滤
+            use_rerank: 是否使用重排序
+        """
         where_conditions = {}
         
         if use_strict_filter:
@@ -75,16 +86,30 @@ class Retriever:
                 where_conditions["book_type"] = detected_book
         
         where_clause = self._build_where_clause(where_conditions) if where_conditions else None
-        vector_results = self.chroma_manager.query(query, n_results=k, where=where_clause)
+        vector_results = self.chroma_manager.query(query, n_results=k*3, where=where_clause)
         vector_results = self._format_results(vector_results)
         
         if use_hybrid:
-            return self.hybrid_retriever.hybrid_search(query, vector_results, top_k=k)
+            results = self.hybrid_retriever.hybrid_search(query, vector_results, top_k=k*2)
+        else:
+            results = vector_results
         
-        return vector_results
+        # 应用重排序
+        if use_rerank and results:
+            results = self.reranker.rerank(query, results, top_k=k)
+        
+        return results
 
-    def search_with_filter(self, query: str, k: int = RETRIEVAL_K, use_hybrid: bool = True, **filters) -> list:
-        """带自定义过滤条件的检索"""
+    def search_with_filter(self, query: str, k: int = RETRIEVAL_K, use_hybrid: bool = True, use_rerank: bool = True, **filters) -> list:
+        """带自定义过滤条件的检索
+        
+        Args:
+            query: 查询文本
+            k: 返回结果数量
+            use_hybrid: 是否使用混合检索
+            use_rerank: 是否使用重排序
+            **filters: 过滤条件
+        """
         where_conditions = {}
         
         if 'book_type' in filters:
@@ -99,13 +124,19 @@ class Retriever:
             where_conditions['source'] = filters['source']
         
         where_clause = self._build_where_clause(where_conditions)
-        vector_results = self.chroma_manager.query(query, n_results=k, where=where_clause)
+        vector_results = self.chroma_manager.query(query, n_results=k*3, where=where_clause)
         vector_results = self._format_results(vector_results)
         
         if use_hybrid:
-            return self.hybrid_retriever.hybrid_search(query, vector_results, top_k=k)
+            results = self.hybrid_retriever.hybrid_search(query, vector_results, top_k=k*2)
+        else:
+            results = vector_results
         
-        return vector_results
+        # 应用重排序
+        if use_rerank and results:
+            results = self.reranker.rerank(query, results, top_k=k)
+        
+        return results
 
     def _format_results(self, results: dict) -> list:
         """格式化检索结果"""
@@ -121,15 +152,28 @@ class Retriever:
                 formatted.append(doc)
         return formatted
 
-    def search_all(self, query: str, k: int = RETRIEVAL_K, use_hybrid: bool = True) -> list:
-        """不带过滤条件的检索"""
-        vector_results = self.chroma_manager.query(query, n_results=k)
+    def search_all(self, query: str, k: int = RETRIEVAL_K, use_hybrid: bool = True, use_rerank: bool = True) -> list:
+        """不带过滤条件的检索
+        
+        Args:
+            query: 查询文本
+            k: 返回结果数量
+            use_hybrid: 是否使用混合检索
+            use_rerank: 是否使用重排序
+        """
+        vector_results = self.chroma_manager.query(query, n_results=k*3)
         vector_results = self._format_results(vector_results)
         
         if use_hybrid:
-            return self.hybrid_retriever.hybrid_search(query, vector_results, top_k=k)
+            results = self.hybrid_retriever.hybrid_search(query, vector_results, top_k=k*2)
+        else:
+            results = vector_results
         
-        return vector_results
+        # 应用重排序
+        if use_rerank and results:
+            results = self.reranker.rerank(query, results, top_k=k)
+        
+        return results
 
     def update_bm25_index(self):
         """更新 BM25 索引"""
